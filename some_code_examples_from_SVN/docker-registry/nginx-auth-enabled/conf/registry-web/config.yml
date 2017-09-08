@@ -1,0 +1,9 @@
+registry:
+#   url: http://hurgada.dev.rugion.ru:5000/v2
+   url: https://docker.dev.rugion.ru/v2
+   name: docker.dev.rugion.ru
+   readonly: false
+   auth:
+     enabled: true
+     key: /conf/auth.key
+     issuer: test

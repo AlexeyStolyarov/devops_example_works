@@ -1,0 +1,104 @@
+---
+
+
+ 
+- block:
+    # statrt other task with local config file 
+  - include: roles/prepare_for_dc66/tasks/main.yml
+  
+  - name: install required packages 
+    apt:
+      name: "{{ item }}"
+      state: 'present'
+      install_recommends: False
+    with_items:
+      - iptables-persistent
+      - iptables
+      - ifupdown-extra
+      - corosync
+      - pacemaker
+  
+
+  - name: configure pacemaker.update-rc.d
+    shell: update-rc.d pacemaker defaults 20 01
+
+  - name: ensure that NIC is up
+    shell: ifup em1.205
+
+  - name: enable corosync in etc/defaults
+    replace: dest=/etc/default/corosync regexp='no' replace='yes' 
+
+ 
+  - name: copy corosync key
+    template:  
+      src: corosync/authkey
+      dest: /etc/corosync/authkey
+      owner:  root
+      group:  root
+      mode:   0400
+
+  - name: copy corosync pacemaker config
+    template:  
+      src: corosync/pcmk
+      dest: /etc/corosync/service.d/pcmk
+      owner:  root
+      group:  root
+      mode:   0644
+
+    
+  - name: copy corosync config
+    template:  
+      src: corosync/corosync.conf.j2
+      dest: /etc/corosync/corosync.conf
+    with_items: 
+      - '{{ server_list }}'
+    when:  item.ip_management == inventory_hostname 
+
+  - name: restart services
+    service: name={{item}} state=restarted
+    with_items:   
+      - corosync
+      - pacemaker
+
+    # we are setting up a two-node cluster. 
+  - name: configure pacemaker.crm 1
+    shell: crm configure property stonith-enabled=false
+  
+    # to disable quorum-related messages in the logs:
+  - name: configure pacemaker.crm 2
+    shell: crm configure property no-quorum-policy=ignore
+    
+  - name: configure pacemaker.set 3. set virtual IP
+    command: crm configure primitive ClusterIP ocf:heartbeat:IPaddr2 params ip={{corosync_virtual_ip}}  cidr_netmask=23 nic={{corosync_virtual_ip_nic}} op monitor interval=30s
+#    ignore_errors: yes
+   
+
+  - name: configure iptables
+    template:  
+      src: 'rules.v4.j2'
+      dest: '/etc/iptables/rules.v4'
+    with_subelements: 
+      - '{{ server_list }}'
+      - 'vlans'
+    when: (item.0.ip_management == inventory_hostname) and ( item.1.address is defined ) and ( item.1.nat is defined )
+    notify: [ 'iptables_reload' ]
+
+  - name: set sysctl if interfaces marked as NAT
+    template:  
+      src: 'sysctl.j2'
+      dest: '/etc/sysctl.d/55-rugion-dc66-ansible.conf'
+    with_subelements: 
+      - '{{ server_list }}'
+      - 'vlans'
+    when: (item.0.ip_management == inventory_hostname) and ( item.1.nat is defined )
+    notify: [ 'sysctl-reload' ]
+
+
+  become: true
+  tags: dc66_nat
+
+
+
+
+
+

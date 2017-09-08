@@ -1,0 +1,22 @@
+# vlan 200 - for internet access
+# vlan 216 - for local subnets
+
+{# if we have ip address for vlan interface -> configure it and make it up  #}
+{% if item.1.address is defined %}
+auto {{ item.0.nic_raw }}.{{ item.1.vlan_id}}
+iface {{ item.0.nic_raw }}.{{ item.1.vlan_id}} inet static
+        address {{ item.1.address}}
+        netmask {{ item.1.netmask}}
+        vlan_raw_device {{ item.0.nic_raw }}
+        {% if item.1.gateway  is defined  %}gateway {{ item.1.gateway  }}
+        {% endif %}
+
+{% else %}
+{# if we not configured ip address -> just describe vlan here and comment it out  #}
+#auto {{ item.0.nic_raw }}.{{ item.1.vlan_id}}
+#iface {{ item.0.nic_raw }}.{{ item.1.vlan_id}} inet static
+#        address x.x.x.x
+#        netmask x.x.x.x
+#        vlan_raw_device {{ item.0.nic_raw }}
+#        gateway x.x.x.x
+{% endif %}

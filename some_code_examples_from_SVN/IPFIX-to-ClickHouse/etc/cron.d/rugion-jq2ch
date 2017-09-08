@@ -1,0 +1,9 @@
+*/2 * * * * root /usr/share/jq2ch/json2ch.sh
+5 * * * * root /usr/share/jq2ch/ch_aggregate.sh
+
+
+
+
+
+
+

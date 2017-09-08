@@ -1,0 +1,28 @@
+version: 0.1
+
+storage:
+  filesystem:
+    rootdirectory: /var/lib/registry
+  delete:
+    enabled: true
+
+http:
+  addr: 0.0.0.0:5000
+
+auth:
+  token:
+    realm: https://docker.dev.rugion.ru/api/auth
+    service: docker.dev.rugion.ru
+    issuer: test
+    rootcertbundle: /etc/docker/registry/auth.cert
+
+log:
+  level: debug
+
+notifications:
+  endpoints:
+    - name: listener
+      url: https://docker.dev.rugion.ru/api/notification
+      timeout: 500ms
+      threshold: 5
+      backoff: 1s

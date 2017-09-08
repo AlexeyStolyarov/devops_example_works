@@ -1,0 +1,20 @@
+---
+
+- block:
+  - name: install pip and docker-compose
+    apt:
+      name: '{{ item }}'
+      state: 'present'
+      install_recommends: False
+    with_flattened:
+      - 'python-pip'
+
+
+  - name: install docker compose
+    shell: pip install docker-compose
+
+  become_user: root
+  become: true
+  tags: docker-compose
+
+

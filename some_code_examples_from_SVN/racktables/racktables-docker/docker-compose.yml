@@ -1,0 +1,26 @@
+racktables:
+  build: .
+  dns: 
+  - 192.168.99.206
+  - 192.168.99.209
+  environment:
+  - DBHOST=racktables.w.mysql.intranet.dev.rugion.ru
+  - DBNAME=racktables
+  - DBUSER=racktables
+  - DBPASS=foDoXba31x0baz
+
+  container_name: docker-racktables_racktables
+
+
+nginx:
+  image: nginx
+  links:
+  - racktables
+  volumes_from:
+  - racktables
+  volumes:
+  - ./nginx.conf:/etc/nginx/nginx.conf
+  ports:
+  - 8080:80
+
+  container_name: docker-racktables_nginx

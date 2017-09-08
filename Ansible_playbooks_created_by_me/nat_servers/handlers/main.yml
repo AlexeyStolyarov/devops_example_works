@@ -1,0 +1,14 @@
+
+- name: iptables_save
+  become: true
+  shell: service iptables-persistent save
+
+
+- name: iptables_reload
+  become: true
+  shell: service iptables-persistent stop && service iptables-persistent start
+
+- name: sysctl-reload
+  become: true
+  shell: service procps start
+

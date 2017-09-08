@@ -1,0 +1,30 @@
+description "Rugion mcrouter container"
+author "Nikolay Didenko"
+start on filesystem and started docker
+stop on runlevel [!2345]
+respawn
+normal exit 0 1 TERM HUP
+pre-start script
+        /usr/bin/docker rm -f mcrouter_INSTANCE 2>/dev/null || true
+end script
+
+script
+        VERSION="latest"
+
+        /usr/bin/docker run --name mcrouter_INSTANCE \
+        -p {{ mcrouter_port }}:11211 \
+        -v /etc/docker.d/mcrouter:/etc/docker.d/mcrouter:ro \
+        -v /tmp/mcrouter:/var/spool/mcrouter \
+        --net=host \
+        docker.dev.rugion.ru/rugion-mcrouter:${VERSION} \
+        mcrouter \
+        --config-file=/etc/docker.d/mcrouter/mcrouter-instance.conf \
+        --port 11211 \
+        --num-proxies=2 \
+        --connection-limit=16384
+
+end script
+
+#        --port 5000 \ # Port(s) to listen on (comma separated).
+#	--num-proxies=2 \ # Run with N threads. Typically one thread per core is a good rule of thumb.
+#	--connection-limit=16384 # File descriptor limit.

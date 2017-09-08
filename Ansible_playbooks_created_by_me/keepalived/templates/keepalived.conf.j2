@@ -1,0 +1,119 @@
+#jinja2: lstrip_blocks: "True", trim_blocks: "True"
+
+
+global_defs {
+   notification_email {
+    stolyarov@info74.ru
+    didenko@info74.ru
+   }
+
+   smtp_server 10.20.16.49 
+   {# sender.mail.dc-66.w.rugion.ru #}
+   smtp_connect_timeout 30
+
+   {#  the last octet from managment IP address #}
+   router_id {{inventory_hostname.split('.')[-1] }}
+
+}
+
+vrrp_script chk_nginx 
+{
+  script       "/etc/keepalived/scripts/chk_nginx.sh"
+  interval 3   ! check every 3 seconds
+  fall 2       ! require 2 failures for KO
+  rise 1       ! require 1 successes for OK
+}
+
+vrrp_script chk_bind9 {
+  script       "/etc/keepalived/scripts/chk_bind9.sh"
+  interval 3   ! check every 3 seconds
+  fall 2       ! require 2 failures for KO
+  rise 1       ! require 1 successes for OK
+}
+
+
+vrrp_script chk_solr {
+  script       "/etc/keepalived/scripts/chk_solr.sh"
+  interval 3   ! check every 3 seconds
+  fall 2       ! require 2 failures for KO
+  rise 1       ! require 1 successes for OK
+}
+
+vrrp_script chk_sphinx {
+  script       "/etc/keepalived/scripts/chk_sphinx.sh"
+  interval 5   ! check every 5 seconds
+  fall 2       ! require 2 failures for KO
+  rise 1       ! require 1 successes for OK
+}
+
+
+{% for k,v in vrrp_instances.items() %}
+    {% for i_keepalived_server_list in  v.keepalived_server_list %}
+        {% if i_keepalived_server_list.ip_management == inventory_hostname %}
+{% if v.track_script == 'chk_ip' %}
+vrrp_script chk_ip_{{v.id}} {
+  script       "/etc/keepalived/scripts/chk_ip.sh {{v.id}}"
+  interval 5   ! check every 5 seconds  if we set this to "1" this cause high Fork_rate (up to 150 ops)
+  fall 1       ! require 1 failures for KO
+  rise 1       ! require 1 successes for OK
+}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+{% endfor %}  
+
+
+
+
+{% for k,v in vrrp_instances.items() %}
+    {% for i_keepalived_server_list in  v.keepalived_server_list %}
+        {% if i_keepalived_server_list.ip_management == inventory_hostname %}
+vrrp_instance {{v.name}}
+{
+
+{# *****************  server we needed is here  ******************  #}
+    state {{ i_keepalived_server_list.keepalived_vrrp_role }}
+    interface  {{i_keepalived_server_list.keepalived_vrrp_dev}}
+    virtual_router_id {{ v.id }}
+    priority {{ i_keepalived_server_list.keepalived_vrrp_priority }}
+
+    virtual_ipaddress {
+        {{v.ip}} dev {{i_keepalived_server_list.keepalived_vrrp_dev}}
+    }
+
+    {% if i_keepalived_server_list.dont_make_script_check is not defined %}
+    track_script {
+      {% if v.track_script == 'chk_ip' %}
+        {{ v.track_script}}_{{v.id}}
+      {% else %}
+        {{ v.track_script }}
+      {% endif %}
+    }
+
+    {% if v.track_script=='chk_bind9' %}
+    notify "/etc/keepalived/scripts/bind9_reload.sh"
+    {% endif %}
+
+    {% endif %}
+
+
+
+    advert_int 2
+    authentication {
+        auth_type PASS
+        auth_pass {{v.password}}
+    }
+
+    smtp_alert
+
+
+
+}
+{# *****************  server we needed upper here  ******************  #}
+        {% endif %}
+    {% endfor %}
+{% endfor %}
+
+
+
+

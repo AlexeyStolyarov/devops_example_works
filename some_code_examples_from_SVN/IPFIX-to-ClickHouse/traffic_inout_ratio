@@ -1,0 +1,29 @@
+#!/bin/bash
+
+#
+# script returns traffin output/input ratio for DC66 for current mounth
+# 
+DB="default.nflow_aggreg"
+if [[ "$1" == "" ]]
+then
+Q="select sum(octetDeltaCount) trafic, direction from $DB   where  toStartOfMonth(dateTime) = toStartOfMonth(now()) Group by direction ORDER BY direction asc"
+else
+Q="select sum(octetDeltaCount) trafic, direction from $DB   where (  toStartOfMonth(dateTime) = toStartOfMonth(now()) and operator = '$1' ) Group by direction ORDER BY direction asc"
+fi
+
+
+
+rez=`clickhouse-client --port 9008 --query="$Q"`
+
+
+read input tr1  output tr2 <<< `echo $rez`
+
+
+balance=`echo "scale=2;$output/$input" | bc`
+
+echo $balance
+
+
+
+
+

@@ -1,0 +1,21 @@
+---
+
+keepalived_vrrp_17_21_pinba:
+  name: vrrp_17_21_pinba
+  id: 21
+  ip: 10.20.17.21/23
+  track_script: chk_ip
+  password: 1721
+
+  keepalived_server_list:
+  - ip_management: 10.20.16.102
+    keepalived_vrrp_dev: eth0.216
+    keepalived_vrrp_role: MASTER 
+    keepalived_vrrp_priority: 40
+
+  - ip_management: 10.20.16.49
+    keepalived_vrrp_dev: em1.216
+    keepalived_vrrp_role: BACKUP
+    keepalived_vrrp_priority: 20
+    dont_make_script_check: yes
+

@@ -1,0 +1,40 @@
+---
+
+- block:
+
+  - name: unprotect config files
+    shell: test -f /usr/share/dse/tomcat/conf/{{ item }} && chattr -i /usr/share/dse/tomcat/conf/{{ item }} || true
+    with_items:
+      - 'server.xml.README'
+##      - 'server.xml'
+
+   
+  - name: copy readme file for solr config
+    template:
+      src: 'server.xml.README'
+      dest: /usr/share/dse/tomcat/conf/server.xml.README
+      owner: root
+      group: root
+      mode: 0644
+   
+  - name: adding <connector> section in server.xml
+    blockinfile:
+      marker: "   <!--  added by ansible keepalived playbook -->"
+      dest: /usr/share/dse/tomcat/conf/server.xml
+      insertafter: <Service name="Solr">
+      block: |4  # <<-- make tab in four signs
+              <Connector
+                port="${http.port}"
+                protocol="HTTP/1.1"
+                address="0.0.0.0"
+                connectionTimeout="20000"
+                redirectPort="8443"
+              />
+   
+  - name: protect config files again
+    command: chattr +i /usr/share/dse/tomcat/conf/{{ item }} 
+    with_items: 
+      - 'server.xml.README'
+      - 'server.xml'
+   
+  become: true   

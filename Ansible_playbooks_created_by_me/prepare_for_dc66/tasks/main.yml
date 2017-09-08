@@ -1,0 +1,76 @@
+---
+
+- block:
+  - name: Adding ./interfaces.d support 
+    lineinfile: dest=/etc/network/interfaces line="source /etc/network/interfaces.d/*.cfg"
+
+  - name: install required packages 
+    apt:
+      name: '{{ item }}'
+      state: 'present'
+      install_recommends: False
+    with_items:
+      - 'ifupdown-extra'
+      - 'stress-ng'
+      - 'screen'
+
+  - name: install required packages . vlan support
+    apt:
+      name: 'vlan'
+      state: 'present'
+      install_recommends: False
+    notify: [ 'modprobe_vlan' ]
+
+
+  - name: make  vlan support persistent
+    lineinfile: dest=/etc/modules line="8021q"
+
+
+  - name: add raw NIC interface
+    template:  
+      src: 'nic_raw.j2'
+      dest: "/etc/network/interfaces.d/{{ item.nic_raw }}.cfg"
+
+    with_items: "{{ server_list }}"
+    when: (item.ip_management == inventory_hostname )  
+
+
+  - name: add vlan interfaces and default route
+    template:  
+      src: 'nic_vlan.j2'
+      dest: '/etc/network/interfaces.d/{{ item.0.nic_raw }}.{{ item.1.vlan_id}}.cfg'
+    with_subelements: 
+      - '{{ server_list }}'
+      - 'vlans'
+    when: (item.0.ip_management == inventory_hostname)
+    notify: [ 'nic_vlan_up' ]
+
+
+  - name: add local routes
+    lineinfile: 
+      dest: /etc/network/routes
+      line: "{{ item.address }}  {{ item.netmask }} {{ networks.gw_private }} dev any"
+    with_items: 
+      - '{{ networks.private }}' 
+    when: item.address is defined
+    notify: [ 'route_restart' ]
+
+  - name: add name server configuration
+    lineinfile: dest=/etc/resolvconf/resolv.conf.d/base  line="nameserver {{ item }}"
+    with_items: ['195.226.222.9', '195.226.222.10']
+    notify: [ 'dns_reload' ]
+
+  - name: disable dhcp configuration for NICs
+    replace: dest=/etc/network/interfaces regexp='dhcp' replace='manual' 
+
+
+  become: true
+  tags: dc66
+
+
+
+
+
+
+## vim: foldmethod=marker:tabstop=2:shiftwidth=2:softtabstop=2
+

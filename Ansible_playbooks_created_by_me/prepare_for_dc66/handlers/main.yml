@@ -1,0 +1,35 @@
+
+- name: iptables_save
+  become: true
+  shell: service iptables-persistent save
+
+
+# Add the 802.1q module
+- name: modprobe_vlan
+  become: true
+  modprobe: name=8021q state=present
+
+
+- name: nic_vlan_up
+  become: true
+  shell: ifup {{ item.0.nic_raw }}.{{ item.1.vlan_id}} 
+  with_subelements: 
+      - '{{ server_list }}'
+      - 'vlans'
+
+- name: route_restart
+  become: true
+  shell: service networking-routes stop && service networking-routes start
+
+- name: iptables_reload
+  become: true
+  shell: service iptables-persistent stop && service iptables-persistent start
+
+- name: sysctl-reload
+  become: true
+  shell: service procps start
+
+
+- name: dns_reload
+  become: true
+  shell: service resolvconf restart

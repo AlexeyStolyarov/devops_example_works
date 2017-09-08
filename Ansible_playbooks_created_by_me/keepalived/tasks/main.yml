@@ -1,0 +1,60 @@
+---
+
+
+- block:
+
+  - name: vrrp_instances=include(vars/vrrp_instances/*.*). wildcards not works here ;(
+    include_vars: 
+      dir: 'vars/vrrp_instances'
+      name: 'vrrp_instances'
+
+
+  - name: install required packages 
+    apt:
+      name: '{{ item }}'
+      state: 'present'
+      install_recommends: False
+    with_items:
+      - 'keepalived'
+
+  - name: Creates directory
+    file: path=/etc/keepalived/scripts state=directory
+
+  - name: Copy scripts
+    template:
+      src: scripts/{{ item }}
+      dest: /etc/keepalived/scripts/{{ item }}
+      owner: root
+      group: root
+      mode: 0755
+    with_items: 
+      - 'chk_bind9.sh'
+      - 'chk_nginx.sh'
+      - 'bind9_reload.sh'
+      - 'chk_solr.sh'
+      - 'chk_sphinx.sh'
+      - 'chk_ip.sh'
+
+  - name: Generate keepalived config
+    template:
+      src: 'keepalived.conf.j2'
+      dest: '/etc/keepalived/keepalived.conf'
+#    notify: keepalived_reload
+
+##configure_nat: yes
+
+  - name: make solr config protection (/usr/share/dse/tomcat/conf/server.xml)
+    include: main-solr.yml
+    when: (use_solr is defined)
+    
+  become: true
+  tags: vrrp
+
+
+
+
+
+
+
+
+

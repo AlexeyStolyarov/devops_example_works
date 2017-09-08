@@ -1,0 +1,15 @@
+*nat
+:PREROUTING ACCEPT
+:INPUT ACCEPT
+:OUTPUT ACCEPT
+:POSTROUTING ACCEPT
+
+{% for i in networks.to_nat %}
+{% if item.1.nat is defined %}
+
+-A POSTROUTING -s {{i.address}}/{{i.netmask}} -o {{item.0.nic_raw}}.{{item.1.vlan_id }}   -j SNAT --to-source  {{item.1.address}}
+
+{% endif %}
+{% endfor %}
+
+COMMIT

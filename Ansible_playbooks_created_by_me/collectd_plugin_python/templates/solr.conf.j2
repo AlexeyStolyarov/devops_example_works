@@ -1,0 +1,14 @@
+<LoadPlugin python>
+    Globals true
+</LoadPlugin>
+
+
+<Plugin python>
+    ModulePath "/etc/collectd/plugins.d/python"
+    Import "solr"
+    <Module solr>
+        solr_url "http://127.0.0.1:8983"
+        jolokia_url "http://127.0.0.1:8778/jolokia/"
+    </Module>
+    Interactive false
+</Plugin>

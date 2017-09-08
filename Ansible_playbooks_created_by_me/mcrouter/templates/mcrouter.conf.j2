@@ -1,0 +1,33 @@
+{
+  "route": {
+    "operation_policies": {
+      "get": {
+        "children": [
+          "PoolRoute|master",
+          "PoolRoute|slave"
+        ],
+        "type": "FailoverRoute"
+      }
+    },
+    "default_policy": {
+      "children": [
+        "PoolRoute|master",
+        "PoolRoute|slave"
+      ],
+      "type": "AllInitialRoute"
+    },
+    "type": "OperationSelectorRoute"
+  },
+  "pools": {
+    "slave": {
+      "servers": [
+        "10.20.16.71:11211"
+      ]
+    },
+    "master": {
+      "servers": [
+        "10.20.16.72:11211"
+      ]
+    }
+  }
+}

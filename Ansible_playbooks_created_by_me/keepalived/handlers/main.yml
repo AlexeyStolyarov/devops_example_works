@@ -1,0 +1,3 @@
+- name: keepalived_reload
+  become: true
+  shell: service keepalived status

@@ -1,0 +1,21 @@
+---
+
+keepalived_vrrp_20:
+  name: VI_20
+  id: 20
+  ip: 195.226.222.20/24 
+  track_script: chk_bind9  #chk_nginx # chk_bind9
+  password: 2220
+
+  keepalived_server_list:
+  - ip_management: 10.20.16.12
+    keepalived_vrrp_dev: bond0.200
+    keepalived_vrrp_role: MASTER 
+    keepalived_vrrp_priority: 40
+
+  - ip_management: 10.20.16.11
+    keepalived_vrrp_dev: bond0.200
+    keepalived_vrrp_role: BACKUP
+    keepalived_vrrp_priority: 20
+    dont_make_script_check: yes
+

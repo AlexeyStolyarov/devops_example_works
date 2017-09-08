@@ -1,0 +1,29 @@
+
+for the reason file /usr/share/dse/tomcat/conf/server.xml must be protected from accidantaly changes
+during dse/cassandra/solr packages updates, this file is protected from deleting/modification by using "chattr +i server.xml" 
+(this would work  in ext{2,3,4} filesystems only)
+
+commands that will help you:
+
+chattr -i <filename>:  remove file protection
+chattr +i <filename>:  set file protection
+lsattr <filename>   :  ls file attributes
+
+
+
+Changes was made according to this url:
+https://docs.datastax.com/en/latest-dse/datastax_enterprise/srch/changingTomcatWebSettings.html
+
+
+To enable Tomcat to listen on all configured interfaces, set rpc_address to 0.0.0.0. 
+Create a Tomcat connector  in the <Service name="Solr"> section of the server.xml file:
+
+<Connector 
+        port="PORT" 
+        protocol="HTTP/1.1" 
+        address="IP_ADDRESS"
+        connectionTimeout="20000" 
+        redirectPort="8443" 
+        />
+
+

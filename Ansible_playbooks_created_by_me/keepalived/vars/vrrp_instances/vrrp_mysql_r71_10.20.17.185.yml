@@ -1,0 +1,25 @@
+---
+
+
+keepalived_vrrp_10_20_17_185_r71:
+  name: keepalived_vrrp_10_20_17_185_r71
+  id: 185
+  ip: 10.20.17.185/23
+  track_script: chk_ip #sphinx  #chk_nginx # chk_bind9
+  password: 17185
+
+  keepalived_server_list:
+ 
+  - ip_management: 10.20.16.27
+    keepalived_vrrp_dev: em1.216
+    keepalived_vrrp_role: BACKUP
+    keepalived_vrrp_priority: 15
+    dont_make_script_check: yes
+
+  - ip_management: 10.20.16.28
+    keepalived_vrrp_dev: em1.216
+    keepalived_vrrp_role: MASTER
+    keepalived_vrrp_priority: 40
+#    dont_make_script_check: yes
+
+

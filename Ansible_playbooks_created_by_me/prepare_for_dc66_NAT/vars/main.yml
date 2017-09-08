@@ -1,0 +1,75 @@
+---
+
+# 
+# networks.private.list_elements: -  use it only if you have public IP address in server. else empty list  i.e. networks.private 
+# server_list.vlans.vlan_id:216.gateway: -  dont forget to comment this out when you have public IP address. you need default GW via public NIC
+# server_list.vlans.vlan_id:200.address: -   when you dont need public IP vlan to be configured simple comment out its IP address
+#
+
+
+
+networks:
+  private:
+    - {address: 192.168.0.0, netmask: 255.255.0.0}
+    - {address: 10.0.0.0,    netmask: 255.0.0.0}
+
+  gw_private: 10.20.16.1
+
+  to_nat: 
+    - {address: 192.168.0.0, netmask: 255.255.0.0}
+    - {address: 10.0.0.0,    netmask: 255.0.0.0}
+
+
+corosync_virtual_ip: 10.20.16.254
+corosync_virtual_ip_nic: em1.216        # nic where virtual IP will binded
+
+corosync_heartbeat_ip: 10.10.10.64      # you may put net address here i.e. 192.168.99.0 instead of 192.168.99.3
+corosync_hearbeat_vlan: 205
+
+server_list:
+  - ip_management: 192.168.99.243  # where ansible will connect to
+    nic_raw: em1                   # on wich NIC configure vlans
+    vlans:
+        #  local network
+      - vlan_id: 216
+        address: 10.20.16.28
+        netmask: 255.255.254.0
+        gateway: 10.20.16.1
+
+        # public network
+      - vlan_id: 200
+        # address: comment if you dont need public vlan
+#        address: 195.226.222.254
+        address: 172.16.0.10
+        netmask: 255.255.255.0
+        gateway: 172.16.0.1
+        nat: yes
+
+       # corosync heartbeat
+      - vlan_id: 205
+        address: 10.10.10.67
+        netmask: 255.255.255.248
+
+
+  - ip_management: 192.168.99.244  # where ansible will connect to
+    nic_raw: em1                   # on wich NIC configure vlans
+    vlans:
+        #  local network
+      - vlan_id: 216
+        address: 10.20.16.29
+        netmask: 255.255.254.0
+#        gateway: 10.20.16.1
+
+        # public network
+      - vlan_id: 200
+        # address: comment if you dont need public vlan
+        address: 195.226.222.253
+        netmask: 255.255.255.0
+        gateway: 195.226.222.1
+        nat: yes
+
+       # corosync heartbeat
+      - vlan_id: 205
+        address: 10.10.10.66
+        netmask: 255.255.255.248
+

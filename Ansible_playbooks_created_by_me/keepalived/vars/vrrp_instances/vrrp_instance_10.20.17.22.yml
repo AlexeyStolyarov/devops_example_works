@@ -1,0 +1,20 @@
+---
+
+keepalived_vrrp_17_22_bind:
+  name: vrrp_17_22_bind
+  id: 22
+  ip: 10.20.17.22/23 
+  track_script: chk_bind9  #chk_nginx # chk_bind9
+  password: 1722
+
+  keepalived_server_list:
+  - ip_management: 10.20.16.12
+    keepalived_vrrp_dev: bond0.216
+    keepalived_vrrp_role: BACKUP
+    keepalived_vrrp_priority: 20
+    dont_make_script_check: yes
+
+  - ip_management: 10.20.16.11
+    keepalived_vrrp_dev: bond0.216
+    keepalived_vrrp_role: MASTER
+    keepalived_vrrp_priority: 40

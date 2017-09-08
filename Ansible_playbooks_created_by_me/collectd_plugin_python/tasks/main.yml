@@ -1,0 +1,90 @@
+---
+
+- block:
+  - name: Create directory for plugins
+    file:
+      path:   '{{ item.path   | default(omit) }}'
+      state:  '{{ item.state  | default("directory") }}'
+      owner:  '{{ item.owner  | default("root") }}'
+      group:  '{{ item.group  | default("root") }}'
+      mode:   '{{ item.mode   | default("0755") }}'
+      src:    '{{ item.src    | default(omit) }}'
+    with_items:
+      - { path: '/etc/collectd/plugins.d/python' }
+    when: (item.path is defined and item.path)
+
+
+  - name: Install python-pip
+    apt:
+      name: '{{ item }}'
+      state: 'present'
+      install_recommends: False
+    with_flattened:
+      - 'python-pip'
+    when: (plugin_name is defined and plugin_name == 'solr')
+
+
+  - name: Install python packages for solr
+    pip:
+      name:    '{{ item.name   | default(omit) }}'
+      version: '{{ item.version   | default(omit) }}'
+    with_items:
+      - { name: 'pyjolokia' }
+    when: (plugin_name is defined and plugin_name == 'solr')
+
+
+  - name: Create directory for plugins/haproxy
+    file:
+      path:   '{{ item.path   | default(omit) }}'
+      state:  '{{ item.state  | default("directory") }}'
+      owner:  '{{ item.owner  | default("root") }}'
+      group:  '{{ item.group  | default("root") }}'
+      mode:   '{{ item.mode   | default("0755") }}'
+      src:    '{{ item.src    | default(omit) }}'
+    with_items:
+      - { path: '/etc/collectd/plugins.d/python/haproxy_modules/haproxy' }
+      - { path: '/etc/collectd/plugins.d/python/haproxy_modules/tools' }
+    when: (plugin_name is defined and plugin_name == 'haproxy')
+
+
+  - name: Copying python plugins Haproxy
+    template:
+      src:    '{{ item.src   | default(omit) }}'
+      dest:   '{{ item.dest   | default(omit) }}'
+      owner:  '{{ item.owner  | default("root") }}'
+      group:  '{{ item.group  | default("root") }}'
+      mode:   '{{ item.mode   | default("0644") }}'
+    with_items:
+      - { dest: '/etc/collectd/plugins.d/python/haproxy_modules/__init__.py',src: 'haproxy_modules/__init__.py' }
+      - { dest: '/etc/collectd/plugins.d/python/haproxy_modules/haproxy/__init__.py',src: 'haproxy_modules/haproxy/__init__.py' }
+      - { dest: '/etc/collectd/plugins.d/python/haproxy_modules/haproxy/haproxy.py', src: 'haproxy_modules/haproxy/haproxy.py' }
+      - { dest: '/etc/collectd/plugins.d/python/haproxy_modules/tools/__init__.py',  src: 'haproxy_modules/haproxy/__init__.py' }
+      - { dest: '/etc/collectd/plugins.d/python/haproxy_modules/tools/data_list.py', src: 'haproxy_modules/tools/data_list.py' }
+    when: (plugin_name is defined and plugin_name == 'haproxy')
+    notify: [ 'Restart collectd' ]
+
+
+  - name: Configure plugin python
+    template:
+      src:    '{{ item.src    | default(omit) }}'
+      dest:   '{{ item.dest   | default(omit) }}'
+      owner:  '{{ item.owner  | default("root") }}'
+      group:  '{{ item.group  | default("root") }}'
+      mode:   '{{ item.mode   | default("0644") }}'
+    with_items:
+      - { dest: '/etc/collectd/collectd.conf.d/plugin.python.{{ plugin_name }}.conf', src: '{{ plugin_name }}.conf.j2' }
+      - { dest: '/etc/collectd/types.conf.d/plugin.python.{{ plugin_name }}.conf', src: '_types.conf.j2' }
+      - { dest: '/etc/collectd/types.conf.d/plugin.python.{{ plugin_name }}.db', src: '{{ plugin_name }}.types.j2' }
+      - { dest: '/etc/collectd/plugins.d/python/{{ plugin_name }}.py', src: '{{ plugin_name }}.py' }
+    when: (item.dest is defined and item.dest)
+    notify: [ 'Restart collectd' ]
+
+
+
+  become_user: root
+  become: true
+  tags: collectd_plugin_python
+  when: (plugin_name is defined)
+
+
+## vim: foldmethod=marker:tabstop=2:shiftwidth=2:softtabstop=2

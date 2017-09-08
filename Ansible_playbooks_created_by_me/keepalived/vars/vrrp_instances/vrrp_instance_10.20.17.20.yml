@@ -1,0 +1,22 @@
+---
+
+keepalived_vrrp_17_20_redis-master:
+  name: vrrp_17_20_redis-master
+  id: 20
+  ip: 10.20.17.20/23
+  track_script: chk_ip
+  password: 1720
+
+  keepalived_server_list:
+  - ip_management: 10.20.16.28
+    keepalived_vrrp_dev: em1.216
+    keepalived_vrrp_role: MASTER 
+    keepalived_vrrp_priority: 40
+#    dont_make_script_check: yes
+
+  - ip_management: 10.20.16.27
+    keepalived_vrrp_dev: em1.216
+    keepalived_vrrp_role: BACKUP
+    keepalived_vrrp_priority: 20
+    dont_make_script_check: yes
+

@@ -1,0 +1,33 @@
+---
+
+- block:
+
+  - name: Create directory for config
+    file:
+      path:   '{{ item.path   | default(omit) }}'
+      state:  '{{ item.state  | default("directory") }}'
+      owner:  '{{ item.owner  | default("root") }}'
+      group:  '{{ item.group  | default("root") }}'
+      mode:   '{{ item.mode   | default("0755") }}'
+      src:    '{{ item.src    | default(omit) }}'
+    with_items:
+      - { path: '/etc/docker.d' }
+      - { path: '/etc/docker.d/mcrouter' }
+
+  - name: copy files
+    template:
+        src:    '{{ item.src    | default(omit) }}'
+        dest:   '{{ item.dest   | default(omit) }}'
+        owner:  '{{ item.owner  | default("root") }}'
+        group:  '{{ item.group  | default("root") }}'
+        mode:   '{{ item.mode   | default("0644") }}'
+    with_items:
+      - { dest: '/etc/docker.d/mcrouter/mcrouter-instance.conf', src: 'mcrouter.conf.j2' }
+      - { dest: '/etc/init/docker-mcrouter.conf', src: 'mcrouter.init.j2' }
+
+
+  become_user: root
+  become: true
+  tags: mcrouter
+
+

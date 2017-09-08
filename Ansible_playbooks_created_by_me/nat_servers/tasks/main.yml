@@ -1,0 +1,34 @@
+---
+
+
+- block:
+
+  - name: install required packages 
+    apt:
+      name: "{{ item }}"
+      state: 'present'
+      install_recommends: False
+    with_items:
+      - iptables-persistent
+      - iptables
+      - ifupdown-extra
+    when: (configure_nat is defined  and configure_nat == true )
+
+  - name: configure iptables
+    template:
+      src: 'rules.v4.j2'
+      dest: '/etc/iptables/rules.v4'
+    when: (configure_nat is defined  and configure_nat == true )
+    notify: [ 'iptables_reload' ]
+
+  - name: set sysctl if interfaces marked as NAT
+    template:  
+      src: 'sysctl.j2'
+      dest: '/etc/sysctl.d/55-rugion-dc66-ansible.conf'
+    when: (configure_nat is defined  and configure_nat == true )
+    notify: [ 'sysctl-reload' ]
+
+
+  become: true
+  tags: nat_servers
+

@@ -1,0 +1,37 @@
+---
+
+
+networks:
+
+  private:
+# use it only if you have public IP address in server
+#    - {address: 192.168.0.0, netmask: 255.255.0.0}
+#    - {address: 10.0.0.0,    netmask: 255.0.0.0}
+
+  gw_private: 10.20.16.1
+
+
+
+server_list:
+  - ip_management: 10.20.16.242
+    nic_raw: eth0
+    vlans:
+        # local network
+      - vlan_id: 216
+        address: 10.20.16.214
+        netmask: 255.255.254.0
+# dont forget to comment this out when you have public IP address. you need default GW via public NIC
+        gateway: 10.20.16.1
+
+        # public network
+      - vlan_id: 200
+#  when you dont need public IP vlan to be configured simple comment out its IP address
+#  if will turn it off
+#        address: 172.16.0.11
+#        netmask: 255.255.255.0
+#        nat: yes
+#        gateway: 172.16.0.1
+
+
+
+
