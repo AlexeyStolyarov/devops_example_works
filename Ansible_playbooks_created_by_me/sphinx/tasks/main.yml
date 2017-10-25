@@ -1,0 +1,27 @@
+---
+
+- block:
+  - name: Install sphinx repository
+    apt_repository:
+      repo:     'ppa:builds/sphinxsearch-rel22'
+      state:    present
+    register: repositories_sphinx_installed
+
+  - name: Update apt cache
+    apt: update_cache=yes
+    when: repositories_sphinx_installed.changed==True
+
+  - name: install sphinx
+    apt:
+      name: '{{ item }}'
+      state: 'present'
+      install_recommends: False
+    with_flattened:
+      - 'sphinxsearch'
+
+  become_user: root
+  become: true
+  tags: sphinx
+
+
+## vim: foldmethod=marker:tabstop=2:shiftwidth=2:softtabstop=2
