@@ -1,0 +1,76 @@
+---
+#
+# HOLD PACKAGE
+# apt-mark hold dse dse-libhadoop-native dse-libhadoop dse-libcassandra dse-libspark dse-libsolr dse-libtomcat dse-libpig dse-pig dse-libsqoop dse-libmahout dse-liblog4j dse-libhive
+#
+# UNHOLD PACKAGES
+# apt-mark unhold "same same"
+#
+- block:
+  - name: install repositories cassandra
+    apt_repository:
+        repo: 'deb http://apt-mirror.dev.rugion.ru/debian.datastax.com/enterprise stable main'
+        state: present
+        filename: 'cassandra'
+        update_cache: yes
+
+  - name: install repositories cassandra key
+    apt_key:
+        state: present
+        url: "https://debian.datastax.com/debian/repo_key"
+
+
+
+  - name: install required packages cassandra
+    apt:
+      name: '{{ item }}'
+      state: 'present'
+      install_recommends: False
+    with_flattened:
+      - 'dse={{ dse_version }}'
+      - 'dse-libhadoop-native={{ dse_version }}'
+      - 'dse-libhadoop={{ dse_version }}'
+      - 'dse-libcassandra={{ dse_version }}'
+      - 'dse-libspark={{ dse_version }}'
+      - 'dse-libsolr={{ dse_version }}'
+      - 'dse-libtomcat={{ dse_version }}'
+      - 'dse-libpig={{ dse_version }}'
+      - 'dse-pig={{ dse_version }}'
+      - 'dse-libsqoop={{ dse_version }}'
+      - 'dse-libmahout={{ dse_version }}'
+      - 'dse-liblog4j={{ dse_version }}'
+      - 'dse-libhive={{ dse_version }}'
+      - 'openjdk-7-jre-headless'
+
+  - name: Configure cassandra configs
+    template:
+      src:    '{{ item.src    | default(omit) }}'
+      dest:   '{{ item.dest   | default(omit) }}'
+      owner:  '{{ item.owner  | default("cassandra") }}'
+      group:  '{{ item.group  | default("cassandra") }}'
+      mode:   '{{ item.mode   | default("0644") }}'
+    with_items:
+      - { dest: '/etc/dse/cassandra/cassandra.yaml', src: 'cassandra.yaml.j2' }
+      - { dest: '/etc/dse/cassandra/cassandra-rackdc.properties', src: 'cassandra-rackdc.properties.j2' }
+      - { dest: '/etc/dse/cassandra/cassandra-env.sh', src: 'cassandra-env.sh.j2' }
+      - { dest: '/etc/dse/cassandra/jolokia.properties', src: 'jolokia.properties.j2' }
+    when: (item.dest is defined and item.dest)
+
+  - name: Install jolokia agent
+    copy:
+      src:    '{{ item.src    | default(omit) }}'
+      dest:   '{{ item.dest   | default(omit) }}'
+      owner:  '{{ item.owner  | default("cassandra") }}'
+      group:  '{{ item.group  | default("cassandra") }}'
+      mode:   '{{ item.mode   | default("0644") }}'
+    with_items:
+      - { dest: '/usr/share/dse/cassandra/lib/jolokia-jvm-1.3.6-agent.jar', src: 'templates/jolokia-jvm-1.3.6-agent.jar' }
+    when: (item.dest is defined and item.dest)
+
+
+  become_user: root
+  become: true
+  tags: cassandra
+
+
+## vim: foldmethod=marker:tabstop=2:shiftwidth=2:softtabstop=2
